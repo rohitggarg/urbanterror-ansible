@@ -1,0 +1,8 @@
+- name: Check utr installed at -> {{ UTR_REMOTE_PATH }}
+  stat:
+    path: "{{ UTR_REMOTE_PATH }}/q3ut4/server.cfg"
+  register: server_cfg
+
+- name: Removing installation from -> {{ UTR_REMOTE_PATH }}
+  file: path="{{ UTR_REMOTE_PATH }}" state=absent
+  when: server_cfg.stat.exists

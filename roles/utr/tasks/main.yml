@@ -1,0 +1,7 @@
+- name: Starting server...
+  include_tasks: run_server.yml
+  when: state != 'absent'
+
+- name: Uninstalling server...
+  include_tasks: remove_server.yml
+  when: state == 'absent'

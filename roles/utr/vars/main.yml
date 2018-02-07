@@ -1,0 +1,1 @@
+utr_server_cfg_path: "{{ UTR_HOST_PATH }}/q3ut4/server.cfg"

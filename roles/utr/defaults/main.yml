@@ -1,0 +1,7 @@
+UTR_HOST_PATH: ../urban43
+UTR_REMOTE_PATH: ~/urban43
+UTR_START_MAP: ut4_riyadh
+UTR_GAME_TYPE: FreeForAll
+UTR_JOIN_PASSWORD: baba
+UTR_ADMIN_PASSWORD: baca
+state: present

@@ -1,0 +1,81 @@
+- name: Game types for urban terror
+  set_fact:
+    UTR_GAME_TYPES:
+      FreeForAll: 0
+      LastManStanding: 1
+      TeamDeathMatch: 3
+      TeamSurvivor: 4
+      FollowTheLeader: 5
+      CaptureAndHold: 6
+      CaptureTheFlag: 7
+      BombMode: 8
+      JumpTraining: 9
+      FreezeTag: 10
+      GunGame: 11
+
+- name: Binaries for architectures
+  set_fact:
+    UTR_BINARIES:
+      Darwin: 
+        from: Quake3-UrT.app/Contents/MacOS/
+        target: Quake3-UrT.x86_64
+      Linux: 
+        from: "Quake3-UrT-Ded.{{ ansible_machine }}"
+        target: "Quake3-UrT-Ded.{{ ansible_machine }}"
+
+- name: Copy executable to remote -> {{ UTR_BINARIES[ansible_system] }}
+  copy:
+    src: "{{ UTR_HOST_PATH }}/{{ UTR_BINARIES[ansible_system]['from'] }}"
+    dest: "{{ UTR_REMOTE_PATH }}/"
+    mode: 0755
+
+- name: Make sure folder exists -> {{ UTR_REMOTE_PATH }}/q3ut4/
+  file:
+    path: "{{ UTR_REMOTE_PATH }}/q3ut4/"
+    state: directory
+
+- name: Look at local installed game at -> {{ UTR_HOST_PATH }}/q3ut4/
+  find:
+    paths: "{{ UTR_HOST_PATH }}/q3ut4/"
+    patterns: '*.pk3'
+  register: game_pk3
+  delegate_to: localhost
+
+- name: Look at remote installed game -> {{ UTR_REMOTE_PATH }}/q3ut4/
+  find:
+    paths: "{{ UTR_REMOTE_PATH }}/q3ut4/"
+    patterns: '*.pk3'
+  register: remote_game_pk3
+
+- name: Copy if size different -> {{ UTR_REMOTE_PATH }}
+  copy:
+    src: "{{ item.path }}"
+    dest: "{{ UTR_REMOTE_PATH }}/{{ item.path }}"
+  with_items: "{{ game_pk3.files | json_query('[].{size: size, path: path}') }}"
+  when: (remote_game_pk3.files | selectattr('path', 'match', '.*' + item.path) | selectattr('size', 'equalto', item.size) | list | count) == 0
+
+- name: Setup server config -> {{ UTR_REMOTE_PATH }}/q3ut4/server.cfg
+  template: src=server.cfg dest="{{ UTR_REMOTE_PATH }}/q3ut4/server.cfg"
+
+- name: Setup server shell command -> {{ UTR_REMOTE_PATH }}/server
+  template: src=server.sh dest="{{ UTR_REMOTE_PATH }}/server" mode=0755
+
+- name: Setup mapcycle -> {{ UTR_REMOTE_PATH }}/q3ut4/mapcycle.txt
+  template: src=mapcycle.txt dest="{{ UTR_REMOTE_PATH }}/q3ut4/mapcycle.txt"
+
+- name: Start app -> {{ UTR_REMOTE_PATH }}/server
+  # shell: "nohup {{ UTR_REMOTE_PATH }}/server &"
+  shell: "{{ UTR_REMOTE_PATH }}/server"
+
+- name: Exit server
+  pause:
+
+- name: Kill the server script
+  command: "killall {{ UTR_BINARIES[ansible_system]['target'] }}"
+
+- name: Print game log
+  command: cat {{ UTR_REMOTE_PATH }}/server.out
+  register: game_log
+
+- debug:
+    msg: "{{ game_log.stdout_lines }}"
