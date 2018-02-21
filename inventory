@@ -1,2 +1,5 @@
 [local_server]
 127.0.0.1 ansible_connection=local UTR_REMOTE_PATH=~/Library/urban43
+
+[remote_server]
+10.133.1.25 UTR_REMOTE_PATH=~/Library/urban43

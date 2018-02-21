@@ -1,0 +1,12 @@
+- hosts: local_server
+  tasks:
+    - name: create directory using cmd
+      command: mkdir test
+      # args:
+      #   creates: test
+      notify: list contents
+  
+  handlers:
+    - name: list contents
+      command: ls -lat
+      changed_when: false
